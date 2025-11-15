@@ -10,6 +10,46 @@ app.use(express.json());
 const { getAuth } = require("firebase-admin/auth");
 const serviceAccount = require("./rentwheels-firebase-adminsdk.json");
 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+const verifyFirebaseToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization || "";
+
+    if (!authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: missing Bearer token" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized: token missing" });
+    }
+
+    const decodedToken = await getAuth()
+      .verifyIdToken(token)
+      .catch((err) => {
+        console.error("verifyIdToken error:", err);
+        throw err;
+      });
+
+    req.firebaseUser = {
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      claims: decodedToken,
+    };
+
+    return next();
+  } catch (err) {
+    console.error("Firebase verification failed:", err);
+
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+};
+
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const uri = process.env.MONGODB_URI;
