@@ -68,7 +68,22 @@ async function run() {
 
     const database = client.db("rent_wheels");
     const carsCollection = database.collection("cars");
+    app.get("/", (req, res) => {
+      res.send({ message: "Server is live" });
+    });
 
+    app.post("/add-car", verifyFirebaseToken, async (req, res) => {
+      const data = req.body;
+      const result = await carsCollection.insertOne(data);
+
+      res.send(result);
+    });
+    app.get("/all-cars", async (req, res) => {
+      const cursor = carsCollection.find();
+      const data = await cursor.toArray();
+
+      res.send(data);
+    });
     app.listen(port, () => {
       console.log(`app listening on port: ${port}`);
     });
