@@ -169,6 +169,23 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+    app.get("/my-listing/", verifyFirebaseToken, async (req, res) => {
+      try {
+        const email = req.query.email;
+
+        if (!email) {
+          return res.status(400).json({ error: "Missing email query param" });
+        }
+
+        const cursor = carsCollection.find({ providerEmail: email });
+        const data = await cursor.toArray();
+
+        res.json(data);
+      } catch (err) {
+        console.error("Error in /my-listing:", err);
+        res.status(500).json({ error: "Server error" });
+      }
+    });
     app.listen(port, () => {
       console.log(`app listening on port: ${port}`);
     });
