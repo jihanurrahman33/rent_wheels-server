@@ -84,6 +84,26 @@ async function run() {
 
       res.send(data);
     });
+    app.get("/cars", async (req, res) => {
+      const cursor = carsCollection.find().limit(6);
+      const data = await cursor.toArray();
+
+      res.send(data);
+    });
+    app.delete("/cars/:id", verifyFirebaseToken, async (req, res) => {
+      const carId = req.params.id;
+      const result = await carsCollection.deleteOne({
+        _id: new ObjectId(carId),
+      });
+
+      res.send(result);
+    });
+    app.get("/car-details/:id", verifyFirebaseToken, async (req, res) => {
+      const carId = req.params.id;
+      const result = await carsCollection.findOne({ _id: new ObjectId(carId) });
+
+      res.send(result);
+    });
     app.listen(port, () => {
       console.log(`app listening on port: ${port}`);
     });
