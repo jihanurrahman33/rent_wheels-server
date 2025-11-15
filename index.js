@@ -104,6 +104,71 @@ async function run() {
 
       res.send(result);
     });
+    app.patch("/book/", verifyFirebaseToken, async (req, res) => {
+      try {
+        const carId = req.query.id;
+        const bookingEmail = req.firebaseUser.email;
+
+        if (!carId) {
+          return res.status(400).send({ message: "Car ID is required" });
+        }
+
+        const filter = { _id: new ObjectId(carId) };
+        const updateDoc = {
+          $set: {
+            carStatus: "unavailable",
+            bookedBy: bookingEmail,
+          },
+        };
+
+        const result = await carsCollection.updateOne(filter, updateDoc);
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error", error });
+      }
+    });
+    app.patch("/removeBooking/", verifyFirebaseToken, async (req, res) => {
+      try {
+        const carId = req.query.id;
+        const bookingEmail = req.firebaseUser.email;
+
+        if (!carId) {
+          return res.status(400).send({ message: "Car ID is required" });
+        }
+
+        const filter = { _id: new ObjectId(carId) };
+        const updateDoc = {
+          $set: {
+            carStatus: "available",
+            bookedBy: "none",
+          },
+        };
+
+        const result = await carsCollection.updateOne(filter, updateDoc);
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error", error });
+      }
+    });
+
+    app.get("/my-bookings", verifyFirebaseToken, async (req, res) => {
+      const realUserEmail = req.firebaseUser.email;
+      const userEmail = req.query.email;
+      if (realUserEmail !== userEmail) {
+        res.status(401).send({ message: "forbidden access" });
+      }
+
+      const query = {
+        bookedBy: userEmail,
+      };
+      const cursor = carsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
     app.listen(port, () => {
       console.log(`app listening on port: ${port}`);
     });
