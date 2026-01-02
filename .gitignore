@@ -1,3 +1,4 @@
 node_modules
 .env
 rentwheels-firebase-adminsdk.json
+.vercel

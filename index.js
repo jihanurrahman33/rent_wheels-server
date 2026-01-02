@@ -98,6 +98,28 @@ async function run() {
 
       res.send(result);
     });
+
+    app.put("/cars/:id", verifyFirebaseToken, async (req, res) => {
+      try {
+        const carId = req.params.id;
+        const updatedCar = req.body;
+        delete updatedCar._id;
+
+        const filter = { _id: new ObjectId(carId) };
+        const updateDoc = {
+          $set: updatedCar,
+        };
+
+        const result = await carsCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating car:", error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+    
+
     app.get("/car-details/:id", verifyFirebaseToken, async (req, res) => {
       const carId = req.params.id;
       const result = await carsCollection.findOne({ _id: new ObjectId(carId) });
